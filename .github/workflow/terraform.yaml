@@ -1,0 +1,25 @@
+name: Terraform CI pipline
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+   check-terraform:
+     runs-on: ubuntu-latest
+     defaults:
+       runs:
+         working-directory: ./terraform
+steps:
+   - name: checkcout repository code
+     uses: actions/checkout@v4
+   - name: Install Terraform
+     uses: hashicorp/setup-terraform@v3
+     with:
+        terraform_version: 1.5.0
+    - name: code format check
+      runs: terraform fmt -checking
+    - name: Initalise terrafrom
+      runs: terraform init -backend=false
+    - name: Validation of Terraform
+      runs: terraform validate
