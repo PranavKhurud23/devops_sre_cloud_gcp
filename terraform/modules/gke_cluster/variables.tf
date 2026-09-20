@@ -3,6 +3,15 @@ variable "cluster_name" {
   type        = string
   default     = "devops-gke-cluster"
 }
+variable "project_id" {
+  description = "The GCP Project ID"
+  type        = string
+}
+
+variable "env" {
+  description = "Environment name"
+  type        = string
+}
 
 variable "region" {
   description = "The GCP region for the cluster"
