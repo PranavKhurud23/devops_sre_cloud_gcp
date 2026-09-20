@@ -25,10 +25,14 @@ module "vpc" {
 
 # Call GKE Module
 module "gke_cluster" {
-  source       = "./modules/gke_cluster"
-  region       = var.region
-  vpc_id       = module.vpc.vpc_id
-  subnet_id    = module.vpc.subnet_id
-  node_count   = 2
-  machine_type = "e2-medium"
+  source         = "./modules/gke_cluster"
+  project_id     = var.project_id
+  region         = var.region
+  env            = var.env
+  vpc_id         = module.vpc.vpc_id
+  subnet_id      = module.vpc.subnet_id
+  pod_range_name = module.vpc.pod_range_name
+  svc_range_name = module.vpc.svc_range_name
+  node_count     = 2
+  machine_type   = "e2-medium"
 }
