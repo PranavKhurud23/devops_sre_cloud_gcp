@@ -15,12 +15,12 @@ provider "google" {
 
 # Call VPC Module
 module "vpc" {
-  source        = "./modules/vpc"
-  vpc_name      = "${var.env}-custom-vpc"
-  region        = var.region
-  subnet_cidr   = "10.10.0.0/20"
-  pods_cidr     = "10.20.0.0/16"
-  service_cidr  = "10.30.0.0/20"
+  source       = "./modules/vpc"
+  vpc_name     = "${var.env}-custom-vpc"
+  region       = var.region
+  subnet_cidr  = "10.10.0.0/20"
+  pods_cidr    = "10.20.0.0/16"
+  service_cidr = "10.30.0.0/20"
 }
 
 # Call GKE Module
