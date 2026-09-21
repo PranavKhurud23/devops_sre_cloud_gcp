@@ -1,4 +1,4 @@
-name: Terraform CI pipline
+name: ci pipline
 on:
   push:
     branches: [ "main" ]
