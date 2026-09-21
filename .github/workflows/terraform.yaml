@@ -1,0 +1,23 @@
+name: Terraform CI pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check-terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Initialise terraform
+        run: terraform init
+
+      - name: Validation of terraform
+        run: terraform validate
