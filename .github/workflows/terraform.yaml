@@ -25,6 +25,13 @@ jobs:
       - name: Validation of terraform
         run: terraform validate
 
+      - name: Security Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          framework: terrafrom
+          output_format: cli
+          soft_fail: true
+
       - name: Terraform Plan
         env:
           GOOGLE_CREDENTIALS: '{"type": "service_account", "project_id": "mock-project-id"}' 
