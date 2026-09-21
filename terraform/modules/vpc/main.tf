@@ -15,8 +15,8 @@ resource "google_compute_subnetwork" "custom_subnet" {
   }
 
   secondary_ip_range {
-    range_name    = "k8s-service-range"
+    range_name = "k8s-service-range"
     #ip_cidr_range = var.services_cidr
-     ip_cidr_range = var.service_cidr
+    ip_cidr_range = var.service_cidr
   }
 }
