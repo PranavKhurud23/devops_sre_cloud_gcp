@@ -26,4 +26,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
+        env:
+          GOOGLE_CREDENTIALS: '{"type": "service_account", "project_id": "mock-project-id"}' 
         run: terraform plan
+        
