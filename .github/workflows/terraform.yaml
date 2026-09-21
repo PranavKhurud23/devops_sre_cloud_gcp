@@ -28,7 +28,7 @@ jobs:
       - name: Security Scan
         uses: bridgecrewio/checkov-action@master
         with:
-          framework: terrafrom
+          framework: terraform
           output_format: cli
           soft_fail: true
 
