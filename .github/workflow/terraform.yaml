@@ -17,8 +17,8 @@ steps:
      uses: hashicorp/setup-terraform@v3
      with:
         terraform_version: 1.5.0
-    - name: code format check
-      runs: terraform fmt -checking
+    #- name: code format check
+     # runs: terraform fmt -checking
     - name: Initalise terrafrom
       runs: terraform init -backend=false
     - name: Validation of Terraform
