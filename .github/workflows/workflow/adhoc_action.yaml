@@ -1,0 +1,55 @@
+name: "Adhoc Terraform Actions (Apply/Destroy)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Select Terraform action to execute'
+        required: true
+        default: 'destroy'
+        type: choice
+        options:
+          - destroy
+          - apply
+          - plan
+
+permissions:
+  contents: read
+  id-token: write
+
+defaults:
+  run:
+    working-directory: ./terraform
+
+jobs:
+  adhoc:
+    name: "Run Terraform Action"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Execute Selected Terraform Action
+        run: |
+          ACTION="${{ inputs.action }}"
+          echo "Executing action: $ACTION"
+          if [ "$ACTION" = "apply" ]; then
+            terraform apply -auto-approve
+          elif [ "$ACTION" = "destroy" ]; then
+            terraform destroy -auto-approve
+          else
+            terraform plan
+          fi
