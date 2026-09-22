@@ -2,11 +2,18 @@
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region
+
   deletion_protection = false
 
-  # Remove default node pool to manage worker nodes separately
+  # Remove default node pool after creation to manage worker nodes separately
   remove_default_node_pool = true
   initial_node_count       = 1
+
+  # Force the temporary bootstrap default pool to use pd-standard disks
+  node_config {
+    disk_size_gb = 30
+    disk_type    = "pd-standard"
+  }
 
   network    = var.vpc_id
   subnetwork = var.subnet_id
@@ -34,7 +41,7 @@ resource "google_container_node_pool" "primary_nodes" {
     preemptible  = false
     machine_type = var.machine_type
     disk_size_gb = 35
-    disk_type = "pd-standard"
+    disk_type    = "pd-standard"
 
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
