@@ -20,6 +20,12 @@ jobs:
       - name: checkout repository code
         uses: actions/checkout@v4
 
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -37,7 +43,11 @@ jobs:
           soft_fail: true
 
       - name: Terraform Plan
-        env:
-          GOOGLE_CREDENTIALS: '{"type": "service_account", "project_id": "mock-project-id"}' 
+        #env:
+        #  GOOGLE_CREDENTIALS: '{"type": "service_account", "project_id": "mock-project-id"}' 
         run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
         
