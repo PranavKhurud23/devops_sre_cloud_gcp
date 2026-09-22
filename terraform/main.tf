@@ -32,6 +32,7 @@ module "gke_cluster" {
   vpc_id         = module.vpc.vpc_id
   subnet_id      = module.vpc.subnet_id
   pod_range_name = module.vpc.pod_range_name
+  master_ipv4_cidr_block = var.master_ipv4_cidr_block
   svc_range_name = module.vpc.svc_range_name
   node_count     = 2
   machine_type   = "e2-medium"

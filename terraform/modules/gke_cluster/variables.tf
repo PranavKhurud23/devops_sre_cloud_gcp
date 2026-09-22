@@ -44,6 +44,12 @@ variable "node_count" {
   default     = 1
 }
 
+variable "master_ipv4_cidr_block" {
+  description = "The IP range in CIDR notation to use for the GKE master control plane"
+  type        = string
+  default     = "172.16.0.0/28"
+}
+
 variable "machine_type" {
   description = "Machine type for cluster nodes"
   type        = string
