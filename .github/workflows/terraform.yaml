@@ -9,6 +9,10 @@ defaults:
   run:
     working-directory: ./terraform
 
+permissions: 
+    contents: read
+    id-token: write
+
 jobs:
   check-terraform:
     runs-on: ubuntu-latest
