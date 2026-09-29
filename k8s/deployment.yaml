@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: expense-tracker
-        image: asia-south1-docker.pkg.dev/project-3abb875e-b867-4aaf-843/expense-repo/expense-tracker-web:latest
+        image: asia-south1-docker.pkg.dev/PROJECT_ID_PLACEHOLDER/expense-repo/expense-tracker-web:latest
         ports:
         - containerPort: 8501
         resources:
