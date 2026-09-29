@@ -1,26 +1,19 @@
-name: Build, Push, and Deploy to GKE
+name: Build, Push & Deploy to GKE
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'app/**'
-      - 'k8s/**'
-      - '.github/workflows/docker-build-push.yaml'
-  workflow_dispatch:
+    branches: [ "main", "feature/*" ]
 
 env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-south1
   REPOSITORY: expense-repo
   IMAGE_NAME: expense-tracker-web
-  GKE_CLUSTER: devops-gke-cluster    # Replace with your exact GKE cluster name
-  GKE_LOCATION: asia-south1          # Replace with your cluster zone/region
+  GKE_CLUSTER: devops-gke-cluster
 
 jobs:
   build-push-deploy:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       id-token: write
@@ -38,40 +31,52 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Get GCP Project ID
-        id: project
-        run: |
-          echo "PROJECT_ID=$(gcloud config get-value project)" >> $GITHUB_ENV
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Configure Docker for GAR
+      - name: Build and Push Docker Image
         run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-
-      - name: Build Docker Image
-        run: |
-          docker build \
-            -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest \
-            ./app
-
-      - name: Push Docker Image
-        run: |
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE_URI ./app
+          docker push $IMAGE_URI
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_LOCATION }}
+          location: ${{ env.REGION }}
 
       - name: Deploy Manifests to GKE
         run: |
+          # Substitute PROJECT_ID_PLACEHOLDER with real project ID
+          sed -i "s/PROJECT_ID_PLACEHOLDER/${{ env.PROJECT_ID }}/g" k8s/deployment.yaml
+          
+          # Apply Kubernetes configurations
           kubectl apply -f k8s/
+          
+          # Trigger rolling update with newly pushed image tag
           kubectl set image deployment/expense-tracker-deployment \
             expense-tracker=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Wait for rollout completion
           kubectl rollout status deployment/expense-tracker-deployment
 
+      - name: Fetch and Print Application URL
+        run: |
           echo "=================================================="
-          echo "Application URL: http://$(kubectl get svc expense-tracker-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+          echo "Waiting for LoadBalancer External IP..."
+          
+          # Loop until External IP is provisioned by GCP LoadBalancer
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            EXTERNAL_IP=$(kubectl get svc expense-tracker-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -z "$EXTERNAL_IP" ]; then
+              echo "IP pending... retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+          
+          echo "=================================================="
+          echo "SUCCESS: Streamlit App is live!"
+          echo "Application URL: http://${EXTERNAL_IP}"
           echo "=================================================="
