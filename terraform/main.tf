@@ -37,10 +37,20 @@ module "gke_cluster" {
   node_count     = 2
   machine_type   = "e2-medium"
 }
-####Create Artifact Registry via Terraform
+# 1. Fetch current project details dynamically at runtime
+data "google_project" "project" {}
+
+# 2. Provision the Docker Artifact Registry repository
 resource "google_artifact_registry_repository" "expense_repo" {
   location      = "asia-south1"
   repository_id = "expense-repo"
-  description   = "Docker repository for expense tracker"
+  description   = "Docker repository for expense tracker application"
   format        = "DOCKER"
+}
+
+# 3. Grant Artifact Registry Reader access to the Compute Engine default service account (used by GKE nodes)
+resource "google_project_iam_member" "gke_artifact_registry_reader" {
+  project = data.google_project.project.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
