@@ -71,3 +71,7 @@ jobs:
           kubectl set image deployment/expense-tracker-deployment \
             expense-tracker=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           kubectl rollout status deployment/expense-tracker-deployment
+
+          echo "=================================================="
+          echo "Application URL: http://$(kubectl get svc expense-tracker-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+          echo "=================================================="
