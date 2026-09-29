@@ -37,3 +37,10 @@ module "gke_cluster" {
   node_count     = 2
   machine_type   = "e2-medium"
 }
+####Create Artifact Registry via Terraform
+resource "google_artifact_registry_repository" "expense_repo" {
+  location      = "asia-south1"
+  repository_id = "expense-repo"
+  description   = "Docker repository for expense tracker"
+  format        = "DOCKER"
+}
