@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to GAR
+name: Build, Push, and Deploy to GKE
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'app/**'
+      - 'k8s/**'
       - '.github/workflows/docker-build-push.yaml'
   workflow_dispatch:
 
@@ -13,9 +14,11 @@ env:
   REGION: asia-south1
   REPOSITORY: expense-repo
   IMAGE_NAME: expense-tracker-web
+  GKE_CLUSTER: devops-gke-cluster    # Replace with your exact GKE cluster name
+  GKE_LOCATION: asia-south1          # Replace with your cluster zone/region
 
 jobs:
-  build-and-push:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     permissions:
@@ -35,14 +38,14 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GAR
-        run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-
       - name: Get GCP Project ID
         id: project
         run: |
           echo "PROJECT_ID=$(gcloud config get-value project)" >> $GITHUB_ENV
+
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build Docker Image
         run: |
@@ -55,3 +58,16 @@ jobs:
         run: |
           docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Deploy Manifests to GKE
+        run: |
+          kubectl apply -f k8s/
+          kubectl set image deployment/expense-tracker-deployment \
+            expense-tracker=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          kubectl rollout status deployment/expense-tracker-deployment
