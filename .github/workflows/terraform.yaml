@@ -1,39 +1,36 @@
-name: Terraform CI pipeline
+name: "Terraform CI/CD"
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-defaults:
-  run:
-    working-directory: ./terraform
-
-permissions: 
-    contents: read
-    id-token: write
 
 jobs:
-  check-terraform:
+  terraform:
+    name: "Terraform Plan and Apply"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
-      - name: checkout repository code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP via Workload Identity
+      - name: Google Auth (Workload Identity)
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Install Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Initialise terraform
-        run: terraform init
-
-      - name: Validation of terraform
-        run: terraform validate
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
 
       - name: Security Scan
         uses: bridgecrewio/checkov-action@master
@@ -41,21 +38,20 @@ jobs:
           framework: terraform
           output_format: cli
           soft_fail: true
-          
+
       - name: Terraform Plan
         env:
-              TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-              TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
-          run: |
-              cd terraform
-              terraform plan
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
+        run: |
+          cd terraform
+          terraform plan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
-            TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-            TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
         run: |
           cd terraform
           terraform apply -auto-approve
-        
