@@ -43,9 +43,12 @@ jobs:
           soft_fail: true
 
       - name: Terraform Plan
-        #env:
-        #  GOOGLE_CREDENTIALS: '{"type": "service_account", "project_id": "mock-project-id"}' 
-        run: terraform plan
+        env:
+              TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+              TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
+          run: |
+              cd terraform
+              terraform plan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
