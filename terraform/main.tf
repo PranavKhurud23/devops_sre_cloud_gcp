@@ -37,15 +37,6 @@ module "gke_cluster" {
   node_count     = 2
   machine_type   = "e2-medium"
 }
-variable "project_id" {
-  type        = string
-  description = "The GCP Project ID"
-}
-
-variable "project_number" {
-  type        = string
-  description = "The GCP Project Number"
-}
 
 # Provision the Docker Artifact Registry repository
 resource "google_artifact_registry_repository" "expense_repo" {
