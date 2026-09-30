@@ -37,10 +37,17 @@ module "gke_cluster" {
   node_count     = 2
   machine_type   = "e2-medium"
 }
-# 1. Fetch current project details dynamically at runtime
-data "google_project" "project" {}
+variable "project_id" {
+  type        = string
+  description = "The GCP Project ID"
+}
 
-# 2. Provision the Docker Artifact Registry repository
+variable "project_number" {
+  type        = string
+  description = "The GCP Project Number"
+}
+
+# Provision the Docker Artifact Registry repository
 resource "google_artifact_registry_repository" "expense_repo" {
   location      = "asia-south1"
   repository_id = "expense-repo"
@@ -48,9 +55,9 @@ resource "google_artifact_registry_repository" "expense_repo" {
   format        = "DOCKER"
 }
 
-# 3. Grant Artifact Registry Reader access to the Compute Engine default service account (used by GKE nodes)
+# Grant Artifact Registry Reader access to default compute service account
 resource "google_project_iam_member" "gke_artifact_registry_reader" {
-  project = data.google_project.project.project_id
+  project = var.project_id
   role    = "roles/artifactregistry.reader"
-  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
 }
