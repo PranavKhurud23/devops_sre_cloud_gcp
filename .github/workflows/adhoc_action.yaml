@@ -44,10 +44,10 @@ jobs:
 
       - name: Execute Selected Terraform Action
         env:
+          ACTION: ${{ inputs.action }}
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
         run: |
-          cd terraform
           echo "Executing action: $ACTION"
           if [ "$ACTION" = "apply" ]; then
             terraform apply -auto-approve
