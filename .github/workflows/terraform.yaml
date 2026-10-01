@@ -1,6 +1,7 @@
-name: "Terraform CI/CD"
+name: Infra Creation
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
