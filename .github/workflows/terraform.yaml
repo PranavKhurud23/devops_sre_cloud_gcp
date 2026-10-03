@@ -55,4 +55,4 @@ jobs:
           TF_VAR_project_number: ${{ secrets.GCP_PROJECT_NUMBER }}
         run: |
           cd terraform
-          terraform apply -auto-approve
+          terraform apply -auto-approve tfplan
